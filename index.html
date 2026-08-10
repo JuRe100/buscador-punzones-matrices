@@ -171,6 +171,14 @@
 
     <div class="filtros" id="filtros">
       <div class="campo">
+        <label>Cliente</label>
+        <select id="f_cliente"><option value="">Todos</option></select>
+      </div>
+      <div class="campo">
+        <label>Troquel</label>
+        <select id="f_troquel"><option value="">Todos</option></select>
+      </div>
+      <div class="campo">
         <label>Tipo</label>
         <select id="f_tipo"><option value="">Todos</option></select>
       </div>
@@ -178,11 +186,6 @@
         <label>Forma</label>
         <select id="f_forma"><option value="">Todas</option></select>
       </div>
-      <div class="campo">
-        <label>Cliente</label>
-        <select id="f_cliente"><option value="">Todos</option></select>
-      </div>
-
       <div class="campo">
         <label>P (mín–máx)</label>
         <div class="rango"><input type="number" id="p_min" placeholder="min"><input type="number" id="p_max" placeholder="max"></div>
@@ -263,7 +266,7 @@ function normKey(v){
 
 function poblarFiltros(){
   const mapas = {
-    f_tipo:"TIPO", f_forma:"FORMA", f_cliente:"CLIENTE"
+    f_cliente:"CLIENTE", f_troquel:"TROQUEL", f_tipo:"TIPO", f_forma:"FORMA"
   };
   Object.entries(mapas).forEach(([id, campo])=>{
     const claves = [...new Set(
@@ -307,9 +310,10 @@ function filtrar(){
   const texto = document.getElementById("texto").value.trim();
   const resultado = datos.filter(f =>
     coincideTexto(f, texto) &&
+    coincideSelect(f,"CLIENTE","f_cliente") &&
+    coincideSelect(f,"TROQUEL","f_troquel") &&
     coincideSelect(f,"TIPO","f_tipo") &&
     coincideSelect(f,"FORMA","f_forma") &&
-    coincideSelect(f,"CLIENTE","f_cliente") &&
     coincideRango(f,"P","p_min","p_max") &&
     coincideRango(f,"W","w_min","w_max")
   );
