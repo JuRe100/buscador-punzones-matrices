@@ -179,6 +179,10 @@
         <select id="f_troquel"><option value="">Todos</option></select>
       </div>
       <div class="campo">
+        <label>Prensa</label>
+        <select id="f_prensa"><option value="">Todas</option></select>
+      </div>
+      <div class="campo">
         <label>Tipo</label>
         <select id="f_tipo"><option value="">Todos</option></select>
       </div>
@@ -218,7 +222,7 @@
       <thead>
         <tr>
           <th>MRO</th><th>Cliente</th><th>Proyecto</th>
-          <th>Troquel</th><th>Descripción</th>
+          <th>Troquel</th><th>Prensa</th><th>Descripción</th>
           <th>Tipo</th><th>Forma</th><th>D</th><th>B</th><th>L</th><th>P</th><th>W</th>
           <th>G</th><th>R</th><th>Fijación</th><th>BS</th><th>Recubr.</th><th>Depth</th>
           <th>Length</th><th>Acero</th><th>Operación</th>
@@ -242,7 +246,7 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_Wha88dke01_H
 let datos = [];
 
 const campos = ["MRO","CLIENTE","PROYECTO",
-  "TROQUEL","DESCRIPCION DAYTON","TIPO","FORMA","D","B","L","P","W","G","R",
+  "TROQUEL","PRENSA","DESCRIPCION DAYTON","TIPO","FORMA","D","B","L","P","W","G","R",
   "FIJACIÓN","BS","RECUBR.","DEPTH","LENGTH","ACERO","OPERACIÓN"];
 
 const numericos = ["D","B","L","P","W","G","R"];
@@ -274,7 +278,7 @@ function normKey(v){
 
 function poblarFiltros(){
   const mapas = {
-    f_cliente:"CLIENTE", f_troquel:"TROQUEL", f_tipo:"TIPO", f_forma:"FORMA", f_d:"D", f_l:"L"
+    f_cliente:"CLIENTE", f_troquel:"TROQUEL", f_prensa:"PRENSA", f_tipo:"TIPO", f_forma:"FORMA", f_d:"D", f_l:"L"
   };
   Object.entries(mapas).forEach(([id, campo])=>{
     const claves = [...new Set(
@@ -320,6 +324,7 @@ function filtrar(){
     coincideTexto(f, texto) &&
     coincideSelect(f,"CLIENTE","f_cliente") &&
     coincideSelect(f,"TROQUEL","f_troquel") &&
+    coincideSelect(f,"PRENSA","f_prensa") &&
     coincideSelect(f,"TIPO","f_tipo") &&
     coincideSelect(f,"FORMA","f_forma") &&
     coincideSelect(f,"D","f_d") &&
