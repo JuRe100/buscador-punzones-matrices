@@ -1,2 +1,420 @@
-# buscador-punzones-matrices
-Buscador de punzones y matrices
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador de Punzones y Matrices</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root{
+    --azul:#0d47a1;
+    --azul-claro:#e3f2fd;
+    --gris:#f5f6f8;
+    --borde:#d7dbe0;
+    --texto:#1f2733;
+    --texto-suave:#5a6472;
+    --verde:#2e7d32;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--gris);
+    color:var(--texto);
+  }
+  header{
+    background:linear-gradient(135deg,var(--azul),#1565c0);
+    color:#fff;
+    padding:20px 16px;
+    text-align:center;
+  }
+  header h1{margin:0;font-size:1.3rem;}
+  header p{margin:4px 0 0;font-size:.85rem;opacity:.9;}
+
+  .container{max-width:1200px;margin:0 auto;padding:16px;}
+
+  .panel{
+    background:#fff;
+    border:1px solid var(--borde);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+
+  .search-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .search-row input[type="text"]{
+    flex:1 1 260px;
+    padding:12px 14px;
+    font-size:1rem;
+    border:1px solid var(--borde);
+    border-radius:8px;
+  }
+  .toggle-filtros{
+    padding:12px 16px;
+    background:var(--azul-claro);
+    border:1px solid var(--borde);
+    border-radius:8px;
+    color:var(--azul);
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  .filtros{
+    display:none;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px;
+    margin-top:14px;
+  }
+  .filtros.abierto{display:grid;}
+
+  .campo label{
+    display:block;
+    font-size:.75rem;
+    font-weight:600;
+    color:var(--texto-suave);
+    margin-bottom:4px;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+  }
+  .campo select, .campo input{
+    width:100%;
+    padding:8px;
+    border:1px solid var(--borde);
+    border-radius:6px;
+    font-size:.9rem;
+  }
+  .rango{display:flex;gap:6px;}
+  .rango input{width:50%;}
+
+  .acciones{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;}
+  .btn{
+    padding:10px 16px;
+    border-radius:8px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+    font-size:.9rem;
+  }
+  .btn-limpiar{background:#fff;border:1px solid var(--borde);color:var(--texto);}
+  .btn-limpiar:hover{background:var(--gris);}
+
+  .resumen{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+    font-size:.9rem;
+    color:var(--texto-suave);
+  }
+  .resumen strong{color:var(--azul);}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+    border-radius:10px;
+    overflow:hidden;
+    font-size:.85rem;
+  }
+  thead th{
+    background:var(--azul);
+    color:#fff;
+    text-align:left;
+    padding:10px 8px;
+    position:sticky;
+    top:0;
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:9px 8px;
+    border-bottom:1px solid var(--borde);
+    white-space:nowrap;
+  }
+  tbody tr:hover{background:var(--azul-claro);}
+  .tabla-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--borde);max-height:65vh;overflow-y:auto;}
+
+  .tarjetas{display:none;}
+  .tarjeta{
+    background:#fff;
+    border:1px solid var(--borde);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .tarjeta .fila{display:flex;justify-content:space-between;padding:3px 0;font-size:.85rem;border-bottom:1px dashed #eee;}
+  .tarjeta .fila:last-child{border-bottom:none;}
+  .tarjeta .fila span:first-child{color:var(--texto-suave);}
+  .tarjeta .titulo{font-weight:700;color:var(--azul);margin-bottom:6px;font-size:.95rem;}
+
+  .estado{padding:40px 10px;text-align:center;color:var(--texto-suave);}
+
+  @media (max-width:760px){
+    .tabla-wrap{display:none;}
+    .tarjetas{display:block;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔍 Buscador de Punzones y Matrices</h1>
+  <p>Base de datos MAT-11 · Refacciones de troqueles</p>
+</header>
+
+<div class="container">
+
+  <div class="panel">
+    <div class="search-row">
+      <input type="text" id="texto" placeholder="Buscar por MRO, troquel, descripción o N. de parte...">
+      <button class="toggle-filtros" id="btnFiltros">⚙ Filtros avanzados</button>
+    </div>
+
+    <div class="filtros" id="filtros">
+      <div class="campo">
+        <label>Prensa</label>
+        <select id="f_prensa"><option value="">Todas</option></select>
+      </div>
+      <div class="campo">
+        <label>Área</label>
+        <select id="f_area"><option value="">Todas</option></select>
+      </div>
+      <div class="campo">
+        <label>Tipo</label>
+        <select id="f_tipo"><option value="">Todos</option></select>
+      </div>
+      <div class="campo">
+        <label>Forma</label>
+        <select id="f_forma"><option value="">Todas</option></select>
+      </div>
+      <div class="campo">
+        <label>Acero</label>
+        <select id="f_acero"><option value="">Todos</option></select>
+      </div>
+      <div class="campo">
+        <label>Cliente</label>
+        <select id="f_cliente"><option value="">Todos</option></select>
+      </div>
+
+      <div class="campo">
+        <label>D (mín–máx)</label>
+        <div class="rango"><input type="number" id="d_min" placeholder="min"><input type="number" id="d_max" placeholder="max"></div>
+      </div>
+      <div class="campo">
+        <label>B (mín–máx)</label>
+        <div class="rango"><input type="number" id="b_min" placeholder="min"><input type="number" id="b_max" placeholder="max"></div>
+      </div>
+      <div class="campo">
+        <label>L (mín–máx)</label>
+        <div class="rango"><input type="number" id="l_min" placeholder="min"><input type="number" id="l_max" placeholder="max"></div>
+      </div>
+      <div class="campo">
+        <label>P (mín–máx)</label>
+        <div class="rango"><input type="number" id="p_min" placeholder="min"><input type="number" id="p_max" placeholder="max"></div>
+      </div>
+      <div class="campo">
+        <label>W (mín–máx)</label>
+        <div class="rango"><input type="number" id="w_min" placeholder="min"><input type="number" id="w_max" placeholder="max"></div>
+      </div>
+      <div class="campo">
+        <label>G (mín–máx)</label>
+        <div class="rango"><input type="number" id="g_min" placeholder="min"><input type="number" id="g_max" placeholder="max"></div>
+      </div>
+      <div class="campo">
+        <label>R (mín–máx)</label>
+        <div class="rango"><input type="number" id="r_min" placeholder="min"><input type="number" id="r_max" placeholder="max"></div>
+      </div>
+    </div>
+
+    <div class="acciones">
+      <button class="btn btn-limpiar" id="btnLimpiar">Limpiar filtros</button>
+    </div>
+  </div>
+
+  <div class="resumen">
+    <span id="resumenTexto">Cargando datos...</span>
+  </div>
+
+  <div class="tabla-wrap">
+    <table id="tabla">
+      <thead>
+        <tr>
+          <th>MRO</th><th>Prensa</th><th>Área</th><th>Cliente</th><th>Proyecto</th>
+          <th>N. Parte</th><th>Consecutivo</th><th>Troquel</th><th>Descripción</th>
+          <th>Tipo</th><th>Forma</th><th>D</th><th>B</th><th>L</th><th>P</th><th>W</th>
+          <th>G</th><th>R</th><th>Fijación</th><th>BS</th><th>Recubr.</th><th>Depth</th>
+          <th>Length</th><th>Acero</th><th>Operación</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="tarjetas" id="tarjetas"></div>
+
+</div>
+
+<script>
+// =======================================================
+// CONFIGURACIÓN: pega aquí la URL de tu hoja de Google Sheets
+// publicada como CSV (Archivo > Compartir > Publicar en la web > CSV)
+// =======================================================
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_Wha88dke01_Hno_wiFkuCHw1dMqrOdGCS_vDpO0CFmQ5euSp6AvX9lqGVSShuQxQPCseRpuPLNRJ/pub?gid=0&single=true&output=csv";
+
+let datos = [];
+
+const campos = ["MRO","PRENSA","ÁREA","CLIENTE","PROYECTO","N. DE PARTE","CONSECUTIVO",
+  "TROQUEL","DESCRIPCION DAYTON","TIPO","FORMA","D","B","L","P","W","G","R",
+  "FIJACIÓN","BS","RECUBR.","DEPTH","LENGTH","ACERO","OPERACIÓN"];
+
+const numericos = ["D","B","L","P","W","G","R"];
+
+function cargarDatos(){
+  Papa.parse(CSV_URL, {
+    download:true,
+    header:true,
+    skipEmptyLines:true,
+    complete:function(res){
+      datos = res.data;
+      poblarFiltros();
+      render(datos);
+    },
+    error:function(){
+      document.getElementById("resumenTexto").textContent =
+        "No se pudieron cargar los datos. Revisa que la URL del CSV esté configurada y publicada.";
+    }
+  });
+}
+
+// Convierte un valor a una "clave" sin acentos, sin espacios extra y en mayúsculas,
+// para que "Matriz", "MATRIZ" y "matriz " se traten como la misma opción.
+function normKey(v){
+  return (v||"").toString().trim().toUpperCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/\s+/g," ");
+}
+
+function poblarFiltros(){
+  const mapas = {
+    f_prensa:"PRENSA", f_area:"ÁREA", f_tipo:"TIPO", f_forma:"FORMA",
+    f_acero:"ACERO", f_cliente:"CLIENTE"
+  };
+  Object.entries(mapas).forEach(([id, campo])=>{
+    const claves = [...new Set(
+      datos.map(d=>normKey(d[campo])).filter(k=>k)
+    )].sort();
+    const sel = document.getElementById(id);
+    claves.forEach(k=>{
+      const opt = document.createElement("option");
+      opt.value = k; opt.textContent = k;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function coincideTexto(fila, texto){
+  if(!texto) return true;
+  const t = texto.toLowerCase();
+  return ["MRO","TROQUEL","DESCRIPCION DAYTON","N. DE PARTE","CONSECUTIVO"]
+    .some(c => (fila[c]||"").toLowerCase().includes(t));
+}
+
+function coincideSelect(fila, campo, id){
+  const val = document.getElementById(id).value;
+  if(!val) return true;
+  return normKey(fila[campo]) === val;
+}
+
+function coincideRango(fila, campo, idMin, idMax){
+  const min = document.getElementById(idMin).value;
+  const max = document.getElementById(idMax).value;
+  const val = parseFloat(fila[campo]);
+  if(isNaN(val)){
+    return !min && !max; // si no hay valor numérico, solo pasa si no se pidió rango
+  }
+  if(min && val < parseFloat(min)) return false;
+  if(max && val > parseFloat(max)) return false;
+  return true;
+}
+
+function filtrar(){
+  const texto = document.getElementById("texto").value.trim();
+  const resultado = datos.filter(f =>
+    coincideTexto(f, texto) &&
+    coincideSelect(f,"PRENSA","f_prensa") &&
+    coincideSelect(f,"ÁREA","f_area") &&
+    coincideSelect(f,"TIPO","f_tipo") &&
+    coincideSelect(f,"FORMA","f_forma") &&
+    coincideSelect(f,"ACERO","f_acero") &&
+    coincideSelect(f,"CLIENTE","f_cliente") &&
+    coincideRango(f,"D","d_min","d_max") &&
+    coincideRango(f,"B","b_min","b_max") &&
+    coincideRango(f,"L","l_min","l_max") &&
+    coincideRango(f,"P","p_min","p_max") &&
+    coincideRango(f,"W","w_min","w_max") &&
+    coincideRango(f,"G","g_min","g_max") &&
+    coincideRango(f,"R","r_min","r_max")
+  );
+  render(resultado);
+}
+
+function render(lista){
+  const tbody = document.getElementById("tbody");
+  const tarjetas = document.getElementById("tarjetas");
+  document.getElementById("resumenTexto").innerHTML =
+    `<strong>${lista.length}</strong> de ${datos.length} registros`;
+
+  if(lista.length === 0){
+    tbody.innerHTML = "";
+    tarjetas.innerHTML = `<div class="estado">No se encontraron resultados con esos criterios.</div>`;
+    return;
+  }
+
+  const maxMostrar = 500;
+  const visibles = lista.slice(0, maxMostrar);
+
+  tbody.innerHTML = visibles.map(f => `
+    <tr>
+      ${campos.map(c=>`<td>${f[c] ?? ""}</td>`).join("")}
+    </tr>
+  `).join("");
+
+  tarjetas.innerHTML = visibles.map(f => `
+    <div class="tarjeta">
+      <div class="titulo">${f["MRO"]||"—"} · ${f["TROQUEL"]||""}</div>
+      <div class="fila"><span>Descripción</span><span>${f["DESCRIPCION DAYTON"]||""}</span></div>
+      <div class="fila"><span>Prensa / Área</span><span>${f["PRENSA"]||""} · ${f["ÁREA"]||""}</span></div>
+      <div class="fila"><span>Tipo / Forma</span><span>${f["TIPO"]||""} ${f["FORMA"]||""}</span></div>
+      <div class="fila"><span>D · B · L</span><span>${f["D"]||"-"} · ${f["B"]||"-"} · ${f["L"]||"-"}</span></div>
+      <div class="fila"><span>P · W · G · R</span><span>${f["P"]||"-"} · ${f["W"]||"-"} · ${f["G"]||"-"} · ${f["R"]||"-"}</span></div>
+      <div class="fila"><span>Acero / Recubr.</span><span>${f["ACERO"]||""} / ${f["RECUBR."]||""}</span></div>
+      <div class="fila"><span>N. de parte</span><span>${f["N. DE PARTE"]||""}</span></div>
+    </div>
+  `).join("");
+
+  if(lista.length > maxMostrar){
+    tarjetas.innerHTML += `<div class="estado">Mostrando los primeros ${maxMostrar} resultados. Afina la búsqueda para ver menos.</div>`;
+  }
+}
+
+document.getElementById("btnFiltros").addEventListener("click", ()=>{
+  document.getElementById("filtros").classList.toggle("abierto");
+});
+
+document.getElementById("btnLimpiar").addEventListener("click", ()=>{
+  document.querySelectorAll("#filtros select").forEach(s=>s.value="");
+  document.querySelectorAll("#filtros input").forEach(i=>i.value="");
+  document.getElementById("texto").value="";
+  render(datos);
+});
+
+document.getElementById("texto").addEventListener("input", filtrar);
+document.querySelectorAll("#filtros select, #filtros input").forEach(el=>{
+  el.addEventListener("input", filtrar);
+  el.addEventListener("change", filtrar);
+});
+
+cargarDatos();
+</script>
+
+</body>
+</html>
